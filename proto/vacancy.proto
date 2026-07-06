@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package vacancy;
+
+option cc_generic_services = false;
+
+// ─── Messages ────────────────────────────────────────────────────────────────
+
+message VacancyRequest {
+    string title       = 1;
+    string company     = 2;
+    string source      = 3;   // hh.kz | habr | tg | upwork
+    int32  salary_from = 4;
+    int32  salary_to   = 5;
+    string currency    = 6;   // RUB | KZT | USD
+    string url         = 7;
+    string description = 8;
+    repeated string tags = 9;
+}
+
+message VacancyResponse {
+    string id          = 1;
+    string title       = 2;
+    string company     = 3;
+    string source      = 4;
+    int32  salary_from = 5;
+    int32  salary_to   = 6;
+    string currency    = 7;
+    string url         = 8;
+    string description = 9;
+    repeated string tags = 10;
+    int64  created_at  = 11;  // Unix timestamp
+    string status      = 12;  // new | viewed | applied | rejected
+}
+
+message GetRequest {
+    string id = 1;
+}
+
+message SearchRequest {
+    string query       = 1;   // substring match on title/company
+    string source      = 2;   // filter by source, empty = all
+    int32  salary_min  = 3;   // 0 = no filter
+    int32  limit       = 4;   // max results, 0 = unlimited
+}
+
+message BatchResponse {
+    int32  added   = 1;
+    int32  failed  = 2;
+    repeated string ids = 3;
+}
+
+// ─── Bidirectional sync messages ─────────────────────────────────────────────
+
+message SyncRequest {
+    oneof payload {
+        VacancyRequest upsert = 1;
+        string         delete_id = 2;
+    }
+}
+
+message SyncResponse {
+    string op      = 1;   // "upserted" | "deleted" | "error"
+    string id      = 2;
+    string message = 3;
+}
+
+// ─── Stats ───────────────────────────────────────────────────────────────────
+
+message StatsRequest {}
+
+message StatsResponse {
+    int32 total     = 1;
+    map<string, int32> by_source = 2;
+    map<string, int32> by_status = 3;
+}
+
+// ─── Service ─────────────────────────────────────────────────────────────────
+
+service VacancyService {
+    // Unary — добавить одну вакансию
+    rpc AddVacancy(VacancyRequest)  returns (VacancyResponse);
+
+    // Unary — получить по id
+    rpc GetVacancy(GetRequest)      returns (VacancyResponse);
+
+    // Unary — статистика
+    rpc GetStats(StatsRequest)      returns (StatsResponse);
+
+    // Server streaming — поиск (стрим результатов)
+    rpc SearchVacancies(SearchRequest) returns (stream VacancyResponse);
+
+    // Client streaming — пакетное добавление
+    rpc BatchAdd(stream VacancyRequest) returns (BatchResponse);
+
+    // Bidirectional streaming — инкрементальная синхронизация
+    rpc SyncVacancies(stream SyncRequest) returns (stream SyncResponse);
+}

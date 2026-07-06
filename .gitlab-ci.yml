@@ -1,0 +1,120 @@
+image: ubuntu:22.04
+
+stages:
+  - build
+  - test
+  - static-analysis
+  - docker
+
+variables:
+  DEBIAN_FRONTEND: noninteractive
+  CMAKE_BUILD_PARALLEL_LEVEL: "4"
+
+# ─── Templates ────────────────────────────────────────────────────────────────
+
+.install_deps: &install_deps
+  before_script:
+    - apt-get update -q
+    - apt-get install -y --no-install-recommends
+        build-essential cmake
+        libgrpc++-dev libprotobuf-dev
+        protobuf-compiler protobuf-compiler-grpc
+        libgtest-dev
+
+# ─── Build stage ──────────────────────────────────────────────────────────────
+
+build:gcc:
+  stage: build
+  <<: *install_deps
+  script:
+    - cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wpedantic -Werror"
+    - cmake --build build
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 hour
+
+build:clang:
+  stage: build
+  <<: *install_deps
+  before_script:
+    - apt-get update -q
+    - apt-get install -y --no-install-recommends
+        clang-16 cmake
+        libgrpc++-dev libprotobuf-dev
+        protobuf-compiler protobuf-compiler-grpc
+        libgtest-dev
+  script:
+    - cmake -B build-clang
+        -DCMAKE_BUILD_TYPE=Debug
+        -DCMAKE_CXX_COMPILER=clang++-16
+        -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wpedantic -Werror"
+    - cmake --build build-clang
+  artifacts:
+    paths:
+      - build-clang/
+    expire_in: 1 hour
+
+# ─── Test stage ───────────────────────────────────────────────────────────────
+
+test:unit:
+  stage: test
+  <<: *install_deps
+  dependencies:
+    - build:gcc
+  script:
+    - ctest --test-dir build --output-on-failure
+  artifacts:
+    reports:
+      junit: build/test_results.xml
+    when: always
+
+# ─── Static analysis stage ────────────────────────────────────────────────────
+
+lint:cppcheck:
+  stage: static-analysis
+  before_script:
+    - apt-get update -q
+    - apt-get install -y cppcheck
+  script:
+    - cppcheck
+        --enable=all
+        --std=c++17
+        --suppress=missingInclude
+        --suppress=unmatchedSuppression
+        --error-exitcode=1
+        --quiet
+        src/ client/ tests/
+
+lint:clang-tidy:
+  stage: static-analysis
+  <<: *install_deps
+  before_script:
+    - apt-get update -q
+    - apt-get install -y --no-install-recommends
+        clang-16 clang-tidy-16 cmake
+        libgrpc++-dev libprotobuf-dev
+        protobuf-compiler protobuf-compiler-grpc
+  dependencies:
+    - build:clang
+  script:
+    - cmake --build build-clang --target vacancy_proto
+    - clang-tidy-16
+        -p build-clang
+        --config-file=.clang-tidy
+        src/main.cpp client/main.cpp
+
+# ─── Docker stage ─────────────────────────────────────────────────────────────
+
+docker:build:
+  stage: docker
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  script:
+    - docker build --target builder -t grpc-vacancy:builder .
+    - docker build -t grpc-vacancy:latest .
+  only:
+    - main
