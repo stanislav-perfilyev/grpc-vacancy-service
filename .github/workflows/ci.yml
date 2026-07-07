@@ -114,6 +114,73 @@ jobs:
             src/storage.h \
             client/main.cpp
 
+  # ── Static analysis: PVS-Studio ─────────────────────────────────────────────
+  pvs-studio:
+    name: PVS-Studio
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends \
+            gcc-13 g++-13 \
+            cmake \
+            libgrpc++-dev \
+            libprotobuf-dev \
+            protobuf-compiler \
+            protobuf-compiler-grpc
+
+      - name: Install PVS-Studio
+        run: |
+          wget -q -O - https://files.viva64.com/etc/pubkey.txt \
+            | sudo gpg --dearmor -o /usr/share/keyrings/pvs-studio-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/pvs-studio-archive-keyring.gpg] \
+            https://files.viva64.com/etc/viva64.list stable main" \
+            | sudo tee /etc/apt/sources.list.d/viva64.list > /dev/null
+          sudo apt-get update -q
+          sudo apt-get install -y pvs-studio
+          pvs-studio-analyzer credentials PVS-Studio Free FREE-FREE-FREE-FREE
+
+      - name: Configure (generate compile_commands.json)
+        env:
+          CC:  gcc-13
+          CXX: g++-13
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_CXX_COMPILER=g++-13
+
+      - name: Generate protobuf stubs
+        run: cmake --build build --target vacancy_proto --parallel
+
+      - name: Analyze
+        run: |
+          pvs-studio-analyzer analyze \
+            -j"$(nproc)" \
+            -f build/compile_commands.json \
+            -o PVS-Studio.log \
+            --exclude-path build/
+
+      - name: Convert report
+        run: |
+          plog-converter \
+            -a GA:1,2 \
+            -t errorfile \
+            -o pvs-report.txt \
+            PVS-Studio.log
+          echo "=== PVS-Studio report ==="
+          cat pvs-report.txt
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pvs-studio-report
+          path: pvs-report.txt
+
   # ── Docker build smoke-test ───────────────────────────────────────────────────
   docker:
     name: Docker build
