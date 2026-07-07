@@ -25,8 +25,8 @@ public:
     void Intercept(grpc::experimental::InterceptorBatchMethods* methods) override {
         if (methods->QueryInterceptionHookPoint(
                 grpc::experimental::InterceptionHookPoints::PRE_SEND_INITIAL_METADATA)) {
-            // Request arrived
-            std::cout << "[gRPC] --> " << method_ << '\n';
+            // Request arrived — single << prevents interleaving in multi-threaded server
+            std::cout << ("[gRPC] --> " + method_ + '\n');
         }
 
         if (methods->QueryInterceptionHookPoint(
@@ -34,8 +34,10 @@ public:
             // Response dispatched — measure latency
             const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::steady_clock::now() - start_).count();
-            std::cout << "[gRPC] <-- " << method_
-                      << " (" << elapsed << " µs)\n";
+            const std::string log_msg =
+                "[gRPC] <-- " + method_ +
+                " (" + std::to_string(elapsed) + " µs)\n";
+            std::cout << log_msg;
         }
 
         methods->Proceed();
