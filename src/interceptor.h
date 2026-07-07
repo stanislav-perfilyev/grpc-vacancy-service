@@ -5,7 +5,10 @@
 #include <chrono>
 #include <iostream>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
+#include <unordered_map>
 
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/support/interceptor.h>
@@ -13,13 +16,57 @@
 
 namespace grpc_vacancy {
 
+
+// ─── Thread-safe metrics registry (shared across all RPC calls) ───────────────
+//
+// Read-heavy access pattern → std::shared_mutex:
+//   write (record): one call finishes  → unique_lock (exclusive)
+//   read  (snapshot): health endpoint  → shared_lock (concurrent)
+//
+struct MethodStats {
+    uint64_t calls{0};
+    uint64_t errors{0};
+    uint64_t total_us{0};  ///< sum of call durations in µs
+};
+
+class MetricsRegistry {
+public:
+    // Called from interceptor (engine thread) — exclusive write
+    void record(const std::string& method, uint64_t elapsed_us, bool ok) noexcept {
+        std::unique_lock lock(m_mtx);
+        auto& s = m_stats[method];
+        ++s.calls;
+        s.total_us += elapsed_us;
+        if (!ok) ++s.errors;
+    }
+
+    // Called from any thread (admin/health) — shared read
+    [[nodiscard]] std::unordered_map<std::string, MethodStats> snapshot() const {
+        std::shared_lock lock(m_mtx);
+        return m_stats;
+    }
+
+    [[nodiscard]] uint64_t total_calls() const noexcept {
+        std::shared_lock lock(m_mtx);
+        uint64_t n = 0;
+        for (const auto& [_, s] : m_stats) n += s.calls;
+        return n;
+    }
+
+private:
+    mutable std::shared_mutex                        m_mtx;
+    std::unordered_map<std::string, MethodStats>     m_stats;
+};
+
 // ─── Per-call interceptor ─────────────────────────────────────────────────────
 
 class LoggingInterceptor : public grpc::experimental::Interceptor {
 public:
-    explicit LoggingInterceptor(grpc::experimental::ServerRpcInfo* info)
+    LoggingInterceptor(grpc::experimental::ServerRpcInfo* info,
+                       std::shared_ptr<MetricsRegistry> metrics)
         : method_{info->method()}
         , start_{std::chrono::steady_clock::now()}
+        , m_metrics{std::move(metrics)}
     {}
 
     void Intercept(grpc::experimental::InterceptorBatchMethods* methods) override {
@@ -38,6 +85,8 @@ public:
                 "[gRPC] <-- " + method_ +
                 " (" + std::to_string(elapsed) + " µs)\n";
             std::cout << log_msg;
+            if (m_metrics)
+                m_metrics->record(method_, static_cast<uint64_t>(elapsed), true);
         }
 
         methods->Proceed();
@@ -46,6 +95,7 @@ public:
 private:
     std::string method_;
     std::chrono::steady_clock::time_point start_;
+    std::shared_ptr<MetricsRegistry> m_metrics;
 };
 
 // ─── Factory ─────────────────────────────────────────────────────────────────
@@ -53,10 +103,22 @@ private:
 class LoggingInterceptorFactory
     : public grpc::experimental::ServerInterceptorFactoryInterface {
 public:
+    LoggingInterceptorFactory()
+        : m_metrics{std::make_shared<MetricsRegistry>()}
+    {}
+
     grpc::experimental::Interceptor* CreateServerInterceptor(
         grpc::experimental::ServerRpcInfo* info) override {
-        return new LoggingInterceptor(info);
+        // Each RPC gets its own LoggingInterceptor but shares the MetricsRegistry
+        return new LoggingInterceptor(info, m_metrics);
     }
+
+    [[nodiscard]] std::shared_ptr<MetricsRegistry> metrics() const noexcept {
+        return m_metrics;
+    }
+
+private:
+    std::shared_ptr<MetricsRegistry> m_metrics;
 };
 
 }  // namespace grpc_vacancy

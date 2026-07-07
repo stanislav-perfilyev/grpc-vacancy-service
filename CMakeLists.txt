@@ -15,6 +15,8 @@ if(NOT GTest_FOUND)
     find_package(GTest REQUIRED)
 endif()
 
+find_package(Threads REQUIRED)
+
 # ─── Protobuf code generation ─────────────────────────────────────────────────
 
 set(PROTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/proto")
@@ -102,6 +104,7 @@ enable_testing()
 
 add_executable(vacancy_tests
     tests/test_vacancy_service.cpp
+    tests/test_mt_interceptor.cpp
 )
 target_include_directories(vacancy_tests PRIVATE
     "${PROTO_GEN_DIR}"
@@ -113,6 +116,7 @@ target_link_libraries(vacancy_tests PRIVATE
     gRPC::grpc++_reflection
     GTest::gtest
     GTest::gtest_main
+    Threads::Threads
 )
 target_compile_options(vacancy_tests PRIVATE ${STRICT_WARNINGS})
 
