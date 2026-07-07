@@ -114,7 +114,7 @@ private:
     }
 
     [[nodiscard]] static bool contains_ci(const std::string& haystack,
-                                          const std::string& needle) {
+                                          const std::string& needle) noexcept {
         auto it = std::search(
             haystack.begin(), haystack.end(),
             needle.begin(),   needle.end(),
@@ -125,4 +125,4 @@ private:
     }
 };
 
-}  // namespace grpc_vacancy
+}  // namespace grp
