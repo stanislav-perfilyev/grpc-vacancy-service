@@ -56,7 +56,7 @@ public:
         return it->second;
     }
 
-    bool remove(const std::string& id) {
+    [[nodiscard]] bool remove(const std::string& id) {
         std::unique_lock lock{mutex_};
         return store_.erase(id) > 0;
     }
@@ -125,4 +125,4 @@ private:
     }
 };
 
-}  // namespace grp
+}  // namespace grpc_vacancy

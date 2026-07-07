@@ -62,14 +62,23 @@ int main(int argc, char* argv[]) {
 
     const auto server = builder.BuildAndStart();
     if (!server) {
-        std::cerr << "Failed to start server on " << address << '\n';
+        std::cerr << ("Failed to start server on " + address + '\n');
         return 1;
     }
 
-    std::cout << "VacancyService listening on " << address << '\n';
+    std::cout << ("VacancyService listening on " + address + '\n');
 
     // ── Graceful shutdown on SIGTERM/SIGINT ───────────────────────────────
     std::signal(SIGTERM, signal_handler);
     std::signal(SIGINT,  signal_handler);
 
-    // Poll until signal received, 
+    // Poll until signal received, then drain the server
+    while (!g_shutdown.load(std::memory_order_relaxed)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    std::cout << "Shutting down...\n";
+    server->Shutdown();
+    server->Wait();
+
+    return 0;
+}
