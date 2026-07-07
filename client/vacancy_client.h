@@ -3,6 +3,7 @@
 #pragma once
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -125,4 +126,4 @@ private:
     }
 };
 
-}  // namespace grpc_vacancy
+}  // n

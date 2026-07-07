@@ -1,9 +1,11 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs.io/en/pvs-studio
+#include <chrono>
 #include <csignal>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
@@ -70,8 +72,4 @@ int main(int argc, char* argv[]) {
     std::signal(SIGTERM, signal_handler);
     std::signal(SIGINT,  signal_handler);
 
-    // Block until signal received
-    server->Wait();
-
-    return 0;
-}
+    // Poll until signal received, 
