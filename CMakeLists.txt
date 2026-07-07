@@ -58,7 +58,7 @@ target_link_libraries(vacancy_proto PUBLIC
 # ─── Strict warning flags ─────────────────────────────────────────────────────
 
 set(STRICT_WARNINGS
-    -Wall -Wextra -Wpedantic
+    -Wall -Wextra -Werror -Wpedantic
     -Wconversion -Wshadow -Wnull-dereference
     -Wno-unused-parameter          # gRPC generated code triggers this
     -fno-omit-frame-pointer
