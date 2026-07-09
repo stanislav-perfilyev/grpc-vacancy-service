@@ -126,9 +126,9 @@ TEST_F(VacancyServiceTest, GetVacancy_EmptyId_ReturnsInvalidArgument) {
 // ─── Server streaming: SearchVacancies ───────────────────────────────────────
 
 TEST_F(VacancyServiceTest, SearchVacancies_ByQuery) {
-    add_one("C++ Engineer", "Sber",    "hh.kz", 280'000);
-    add_one("Python Dev",   "Tinkoff", "habr",  200'000);
-    add_one("C++ Backend",  "VK",      "hh.kz", 320'000);
+    (void)add_one("C++ Engineer", "Sber",    "hh.kz", 280'000);
+    (void)add_one("Python Dev",   "Tinkoff", "habr",  200'000);
+    (void)add_one("C++ Backend",  "VK",      "hh.kz", 320'000);
 
     grpc::ClientContext ctx;
     ::vacancy::SearchRequest req;
@@ -146,9 +146,9 @@ TEST_F(VacancyServiceTest, SearchVacancies_ByQuery) {
 }
 
 TEST_F(VacancyServiceTest, SearchVacancies_BySalary) {
-    add_one("Junior Dev",  "X", "hh.kz",  80'000);
-    add_one("Mid Dev",     "Y", "hh.kz", 200'000);
-    add_one("Senior Dev",  "Z", "hh.kz", 350'000);
+    (void)add_one("Junior Dev",  "X", "hh.kz",  80'000);
+    (void)add_one("Mid Dev",     "Y", "hh.kz", 200'000);
+    (void)add_one("Senior Dev",  "Z", "hh.kz", 350'000);
 
     grpc::ClientContext ctx;
     ::vacancy::SearchRequest req;
@@ -165,9 +165,9 @@ TEST_F(VacancyServiceTest, SearchVacancies_BySalary) {
 }
 
 TEST_F(VacancyServiceTest, SearchVacancies_BySource) {
-    add_one("Dev A", "A", "hh.kz",  200'000);
-    add_one("Dev B", "B", "habr",   200'000);
-    add_one("Dev C", "C", "hh.kz",  200'000);
+    (void)add_one("Dev A", "A", "hh.kz",  200'000);
+    (void)add_one("Dev B", "B", "habr",   200'000);
+    (void)add_one("Dev C", "C", "hh.kz",  200'000);
 
     grpc::ClientContext ctx;
     ::vacancy::SearchRequest req;
@@ -246,9 +246,9 @@ TEST_F(VacancyServiceTest, SyncVacancies_UpsertAndDelete) {
 // ─── Unary: GetStats ─────────────────────────────────────────────────────────
 
 TEST_F(VacancyServiceTest, GetStats_CountsCorrectly) {
-    add_one("Dev1", "A", "hh.kz",  200'000);
-    add_one("Dev2", "B", "habr",   200'000);
-    add_one("Dev3", "C", "hh.kz",  200'000);
+    (void)add_one("Dev1", "A", "hh.kz",  200'000);
+    (void)add_one("Dev2", "B", "habr",   200'000);
+    (void)add_one("Dev3", "C", "hh.kz",  200'000);
 
     grpc::ClientContext ctx;
     ::vacancy::StatsRequest req;
@@ -291,8 +291,8 @@ TEST(StorageTest, SearchCaseInsensitive) {
     ::vacancy::VacancyRequest r1, r2;
     r1.set_title("Senior C++ Developer"); r1.set_company("A"); r1.set_source("x"); r1.set_salary_from(300'000);
     r2.set_title("Python Engineer");      r2.set_company("B"); r2.set_source("x"); r2.set_salary_from(200'000);
-    ASSERT_TRUE(s.add(r1));
-    ASSERT_TRUE(s.add(r2));
+    ASSERT_FALSE(s.add(r1).empty());
+    ASSERT_FALSE(s.add(r2).empty());
 
     const auto res = s.search("c++", "", 0, 0);
     EXPECT_EQ(res.size(), 1u);

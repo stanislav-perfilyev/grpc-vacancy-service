@@ -14,8 +14,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ─── Dependencies ─────────────────────────────────────────────────────────────
 
-find_package(Protobuf CONFIG REQUIRED)
-find_package(gRPC     CONFIG REQUIRED)
+# cmake/ contains FindgRPC.cmake fallback for distros without gRPCConfig.cmake
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+find_package(Protobuf REQUIRED)  # MODULE mode — works with Ubuntu 22.04 protobuf 3.12.4
+find_package(gRPC     REQUIRED)  # tries CONFIG first, falls back to cmake/FindgRPC.cmake
 find_package(GTest    CONFIG QUIET)
 
 if(NOT GTest_FOUND)
