@@ -72,9 +72,10 @@ int main(int argc, char* argv[]) {
     std::signal(SIGTERM, signal_handler);
     std::signal(SIGINT,  signal_handler);
 
+    static constexpr int kShutdownPollMs = 100;  ///< shutdown poll interval
     // Poll until signal received, then drain the server
     while (!g_shutdown.load(std::memory_order_relaxed)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(kShutdownPollMs));
     }
     std::cout << "Shutting down...\n";
     server->Shutdown();

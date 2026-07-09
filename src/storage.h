@@ -17,6 +17,7 @@ namespace grpc_vacancy {
 
 // ─── Thread-safe in-memory vacancy store ─────────────────────────────────────
 
+/// InMemoryStorage — thread-safe, mutex-guarded vacancy store backed by std::vector.
 class InMemoryStorage {
 public:
     InMemoryStorage() = default;

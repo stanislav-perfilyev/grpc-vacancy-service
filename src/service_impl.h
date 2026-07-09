@@ -13,6 +13,7 @@
 
 namespace grpc_vacancy {
 
+/// VacancyServiceImpl — gRPC service handler: maps RPC methods to InMemoryStorage operations.
 class VacancyServiceImpl final : public ::vacancy::VacancyService::Service {
 public:
     explicit VacancyServiceImpl(std::shared_ptr<InMemoryStorage> storage)
