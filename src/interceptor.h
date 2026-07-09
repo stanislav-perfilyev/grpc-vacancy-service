@@ -23,12 +23,14 @@ namespace grpc_vacancy {
 //   write (record): one call finishes  → unique_lock (exclusive)
 //   read  (snapshot): health endpoint  → shared_lock (concurrent)
 //
+/// MethodStats — per-method RPC telemetry: call count, total latency.
 struct MethodStats {
     uint64_t calls{0};
     uint64_t errors{0};
     uint64_t total_us{0};  ///< sum of call durations in µs
 };
 
+/// MetricsRegistry — thread-safe registry of per-method gRPC stats.
 class MetricsRegistry {
 public:
     // Called from interceptor (engine thread) — exclusive write
@@ -60,6 +62,7 @@ private:
 
 // ─── Per-call interceptor ─────────────────────────────────────────────────────
 
+/// LoggingInterceptor — per-call interceptor: logs method, status, latency.
 class LoggingInterceptor : public grpc::experimental::Interceptor {
 public:
     LoggingInterceptor(grpc::experimental::ServerRpcInfo* info,
@@ -100,6 +103,7 @@ private:
 
 // ─── Factory ─────────────────────────────────────────────────────────────────
 
+/// LoggingInterceptorFactory — creates LoggingInterceptor per-call; gRPC takes ownership.
 class LoggingInterceptorFactory
     : public grpc::experimental::ServerInterceptorFactoryInterface {
 public:

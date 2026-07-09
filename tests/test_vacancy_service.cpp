@@ -291,8 +291,8 @@ TEST(StorageTest, SearchCaseInsensitive) {
     ::vacancy::VacancyRequest r1, r2;
     r1.set_title("Senior C++ Developer"); r1.set_company("A"); r1.set_source("x"); r1.set_salary_from(300'000);
     r2.set_title("Python Engineer");      r2.set_company("B"); r2.set_source("x"); r2.set_salary_from(200'000);
-    s.add(r1);
-    s.add(r2);
+    ASSERT_TRUE(s.add(r1));
+    ASSERT_TRUE(s.add(r2));
 
     const auto res = s.search("c++", "", 0, 0);
     EXPECT_EQ(res.size(), 1u);

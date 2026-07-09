@@ -14,6 +14,7 @@
 
 namespace grpc_vacancy {
 
+/// VacancyClient — gRPC stub wrapper: search, add, update, delete vacancies.
 class VacancyClient {
 public:
     explicit VacancyClient(std::shared_ptr<grpc::Channel> channel)
@@ -126,4 +127,4 @@ private:
     }
 };
 
-}  // n
+}  // namespace grpc_vacancy

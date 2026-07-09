@@ -11,6 +11,15 @@
 
 #include "vacancy_client.h"
 
+// ── Demo salary constants ────────────────────────────────────────────────────
+static constexpr int kSalarySearchFrom  = 300'000;
+static constexpr int kSalarySearchTo    = 450'000;
+static constexpr int kSalaryQtDev       = 250'000;
+static constexpr int kSalaryEmbedded    = 320'000;
+static constexpr int kSalaryBackend     = 280'000;
+static constexpr int kSalarySearchMin   = 200'000;
+static constexpr int kSalaryUpdateFrom  = 200'000;
+
 namespace {
 
 void print_vacancy(const ::vacancy::VacancyResponse& v) {
@@ -32,8 +41,8 @@ void run_demo(grpc_vacancy::VacancyClient& client) {
         req.set_title("Senior C++ Developer");
         req.set_company("Yandex");
         req.set_source("hh.kz");
-        req.set_salary_from(300'000);
-        req.set_salary_to(450'000);
+        req.set_salary_from(kSalarySearchFrom);
+        req.set_salary_to(kSalarySearchTo);
         req.set_currency("RUB");
         req.set_url("https://hh.kz/vacancy/123");
         req.add_tags("C++17");
@@ -61,9 +70,9 @@ void run_demo(grpc_vacancy::VacancyClient& client) {
             return r;
         };
 
-        batch.push_back(make("Qt Developer",         "EPAM",   "habr",  250'000));
-        batch.push_back(make("Embedded C++ Engineer","Luxoft",  "hh.kz", 320'000));
-        batch.push_back(make("C++ Backend",          "SberTech","habr",  280'000));
+        batch.push_back(make("Qt Developer",         "EPAM",   "habr",  kSalaryQtDev));
+        batch.push_back(make("Embedded C++ Engineer","Luxoft",  "hh.kz", kSalaryEmbedded));
+        batch.push_back(make("C++ Backend",          "SberTech","habr",  kSalaryBackend));
         batch.push_back(make("",                     "BadCo",   "tg",          0)); // will fail
 
         const auto resp = client.BatchAdd(batch);
@@ -87,7 +96,7 @@ void run_demo(grpc_vacancy::VacancyClient& client) {
 
     std::cout << "\n══ 4. SearchVacancies (server stream) ═════════════════\n";
     {
-        const auto results = client.SearchVacancies("C++", "", 200'000, 10);
+        const auto results = client.SearchVacancies("C++", "", kSalarySearchMin, 10);
         std::cout << "Found " << results.size() << " vacancies:\n";
         for (const auto& v : results) print_vacancy(v);
     }
@@ -103,7 +112,7 @@ void run_demo(grpc_vacancy::VacancyClient& client) {
             u->set_title("DevOps Engineer");
             u->set_company("MTC");
             u->set_source("tg");
-            u->set_salary_from(200'000);
+            u->set_salary_from(kSalaryUpdateFrom);
             u->set_currency("RUB");
             reqs.push_back(r);
         }
