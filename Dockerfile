@@ -33,13 +33,21 @@ FROM ubuntu:22.04 AS runtime
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgrpc++1.51 \
-    libprotobuf23 \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     # Non-root user
     && groupadd -r appgroup \
     && useradd  -r -g appgroup -s /sbin/nologin appuser
+
+# Copy shared libraries from builder — avoids version-pinned apt package names
+# that change between Ubuntu 22.04 updates (e.g. libgrpc++1.46 → libgrpc++1.51 → ...)
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libgrpc*.so*    /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libprotobuf*.so* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libgpr*.so*     /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libupb*.so*     /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libabsl*.so*    /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libre2*.so*     /usr/lib/x86_64-linux-gnu/
+RUN ldconfig
 
 COPY --from=builder /build/build/grpc_server /usr/local/bin/grpc_server
 
