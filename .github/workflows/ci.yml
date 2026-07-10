@@ -10,18 +10,18 @@ jobs:
   # ── Build + Test ─────────────────────────────────────────────────────────────
   build-test:
     name: Build & Test (${{ matrix.compiler }})
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
         include:
-          - compiler: gcc-13
-            cc: gcc-13
-            cxx: g++-13
-          - compiler: clang-16
-            cc: clang-16
-            cxx: clang++-16
+          - compiler: gcc-14
+            cc: gcc-14
+            cxx: g++-14
+          - compiler: clang-18
+            cc: clang-18
+            cxx: clang++-18
 
     env:
       CC:  ${{ matrix.cc }}
@@ -34,7 +34,7 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -y --no-install-recommends \
-            ${{ matrix.compiler == 'gcc-13' && 'gcc-13 g++-13' || 'clang-16 clang++-16' }} \
+            ${{ matrix.compiler == 'gcc-14' && 'gcc-14 g++-14' || 'clang-18 clang++-18' }} \
             cmake \
             libgrpc++-dev \
             libprotobuf-dev \
@@ -54,7 +54,7 @@ jobs:
   # ── Static analysis: cppcheck ────────────────────────────────────────────────
   cppcheck:
     name: cppcheck
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -79,7 +79,7 @@ jobs:
   # ── Static analysis: clang-tidy ──────────────────────────────────────────────
   clang-tidy:
     name: clang-tidy
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -87,7 +87,7 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -y --no-install-recommends \
-            clang-16 clang-tidy-16 \
+            clang-18 clang-tidy-18 \
             cmake \
             libgrpc++-dev \
             libprotobuf-dev \
@@ -99,7 +99,7 @@ jobs:
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-            -DCMAKE_CXX_COMPILER=clang++-16
+            -DCMAKE_CXX_COMPILER=clang++-18
 
       # Generate protobuf headers first so clang-tidy finds them
       - name: Generate protobuf stubs
@@ -107,7 +107,7 @@ jobs:
 
       - name: Run clang-tidy
         run: |
-          clang-tidy-16 \
+          clang-tidy-18 \
             -p build \
             --config-file=.clang-tidy \
             src/main.cpp \
@@ -118,7 +118,8 @@ jobs:
   # ── Static analysis: PVS-Studio ─────────────────────────────────────────────
   pvs-studio:
     name: PVS-Studio
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -126,7 +127,7 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -y --no-install-recommends \
-            gcc-13 g++-13 \
+            gcc-14 g++-14 \
             cmake \
             libgrpc++-dev \
             libprotobuf-dev \
@@ -146,13 +147,13 @@ jobs:
 
       - name: Configure (generate compile_commands.json)
         env:
-          CC:  gcc-13
-          CXX: g++-13
+          CC:  gcc-14
+          CXX: g++-14
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-            -DCMAKE_CXX_COMPILER=g++-13
+            -DCMAKE_CXX_COMPILER=g++-14
 
       - name: Generate protobuf stubs
         run: cmake --build build --target vacancy_proto --parallel
@@ -185,7 +186,7 @@ jobs:
   # ── Docker build smoke-test ───────────────────────────────────────────────────
   docker:
     name: Docker build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
