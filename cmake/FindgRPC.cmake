@@ -38,6 +38,7 @@ if(gRPC_FOUND)
         set_target_properties(gRPC::grpc++ PROPERTIES
             IMPORTED_LOCATION             "${gRPC_grpcpp_LIBRARY}"
             INTERFACE_INCLUDE_DIRECTORIES "${PC_GRPCPP_INCLUDE_DIRS}"
+            INTERFACE_LINK_LIBRARIES      "${PC_GRPCPP_LINK_LIBRARIES}"
         )
     endif()
 

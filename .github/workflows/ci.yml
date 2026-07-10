@@ -70,6 +70,7 @@ jobs:
             --suppress=missingIncludeSystem \
             --suppress=unusedVariable \
             --suppress=unusedFunction \
+            --suppress=useStlAlgorithm \
             --suppress=unmatchedSuppression \
             --suppress=checkersReport \
             --error-exitcode=1 \
@@ -92,7 +93,8 @@ jobs:
             libgrpc++-dev \
             libprotobuf-dev \
             protobuf-compiler \
-            protobuf-compiler-grpc
+            protobuf-compiler-grpc \
+            libgtest-dev
 
       - name: Configure (generate compile_commands.json)
         run: |

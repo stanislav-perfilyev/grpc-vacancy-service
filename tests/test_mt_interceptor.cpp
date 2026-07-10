@@ -39,7 +39,7 @@ TEST(MetricsRegistry, MT_ConcurrentWrites_TotalCountCorrect) {
     threads.reserve(kWriters);
 
     for (int w = 0; w < kWriters; ++w) {
-        threads.emplace_back([&, w]() {
+        threads.emplace_back([&]() {
             for (int i = 0; i < kCallsPerWriter; ++i) {
                 const auto& m = kMethodNames[i % kMethods];
                 reg.record(m, static_cast<uint64_t>(i % 1000), /*ok=*/true);
@@ -166,7 +166,7 @@ TEST(MetricsRegistry, MT_Throughput_AtLeast_1M_RecordsPerSec) {
     const auto t0 = std::chrono::steady_clock::now();
     std::vector<std::thread> threads;
     for (int w = 0; w < kThreads; ++w) {
-        threads.emplace_back([&, w]() {
+        threads.emplace_back([&]() {
             for (int i = 0; i < kRecords / kThreads; ++i)
                 reg.record(kMethodNames[i % kMethods], static_cast<uint64_t>(i % 500), true);
         });
