@@ -103,9 +103,9 @@ jobs:
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
             -DCMAKE_CXX_COMPILER=clang++-18
 
-      # Generate protobuf headers first so clang-tidy finds them
-      - name: Generate protobuf stubs
-        run: cmake --build build --target vacancy_proto --parallel
+      # Build full project so compile_commands.json covers all targets
+      - name: Build
+        run: cmake --build build --parallel
 
       - name: Run clang-tidy
         run: |
@@ -113,9 +113,7 @@ jobs:
             -p build \
             --config-file=.clang-tidy \
             src/main.cpp \
-            src/service_impl.h \
-            src/storage.h \
-            client/main.cpp
+            client/client_main.cpp
 
   # ── Static analysis: PVS-Studio ─────────────────────────────────────────────
   pvs-studio:
