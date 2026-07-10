@@ -141,7 +141,7 @@ jobs:
             https://wcdn.pvs-studio.com/etc/viva64.list
           sudo apt-get update -q
           sudo apt-get install -y pvs-studio
-          pvs-studio-analyzer credentials PVS-Studio Free FREE-FREE-FREE-FREE
+          pvs-studio-analyzer credentials ${{ secrets.PVS_STUDIO_CREDENTIALS }}
 
       - name: Configure (generate compile_commands.json)
         env:
