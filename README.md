@@ -114,3 +114,7 @@ grpc_cli ls localhost:50051
 grpc_cli call localhost:50051 vacancy.VacancyService.AddVacancy \
     "title: 'Senior C++ Dev', company: 'Yandex', source: 'hh.kz', salary_from: 300000, currency: 'RUB'"
 ```
+
+## SAST Tools
+
+[PVS-Studio](https://pvs-studio.com/en/pvs-studio/?utm_source=website&utm_medium=github&utm_campaign=open_source) - static analyzer for C, C++, C#, and Java code.
