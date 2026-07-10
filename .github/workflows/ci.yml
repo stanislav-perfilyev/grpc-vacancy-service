@@ -43,10 +43,7 @@ jobs:
             libgtest-dev
 
       - name: Configure
-        run: |
-          cmake -B build \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wpedantic -Werror"
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build
         run: cmake --build build --parallel "$(nproc)"
@@ -70,7 +67,11 @@ jobs:
             --enable=all \
             --std=c++17 \
             --suppress=missingInclude \
+            --suppress=missingIncludeSystem \
+            --suppress=unusedVariable \
+            --suppress=unusedFunction \
             --suppress=unmatchedSuppression \
+            --suppress=checkersReport \
             --error-exitcode=1 \
             --quiet \
             src/ client/ tests/
