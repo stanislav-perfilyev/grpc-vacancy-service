@@ -113,8 +113,8 @@ public:
 
     grpc::experimental::Interceptor* CreateServerInterceptor(
         grpc::experimental::ServerRpcInfo* info) override {
-        // Each RPC gets its own LoggingInterceptor but shares the MetricsRegistry
-        return new LoggingInterceptor(info, m_metrics);
+        // gRPC interceptor factory API requires raw pointer ownership transfer
+        return new LoggingInterceptor(info, m_metrics);  // NOLINT(cppcoreguidelines-owning-memory)
     }
 
     [[nodiscard]] std::shared_ptr<MetricsRegistry> metrics() const noexcept {

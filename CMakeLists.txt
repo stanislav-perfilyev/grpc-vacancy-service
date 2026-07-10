@@ -95,7 +95,7 @@ target_compile_options(grpc_server PRIVATE ${STRICT_WARNINGS})
 # ─── Client ───────────────────────────────────────────────────────────────────
 
 add_executable(grpc_client
-    client/main.cpp
+    client/client_main.cpp
 )
 target_include_directories(grpc_client PRIVATE
     "${PROTO_GEN_DIR}"
