@@ -131,7 +131,8 @@ jobs:
             libgrpc++-dev \
             libprotobuf-dev \
             protobuf-compiler \
-            protobuf-compiler-grpc
+            protobuf-compiler-grpc \
+            libgtest-dev
 
       - name: Install PVS-Studio
         run: |
